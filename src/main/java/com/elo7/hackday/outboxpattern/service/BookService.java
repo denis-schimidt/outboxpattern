@@ -1,10 +1,8 @@
 package com.elo7.hackday.outboxpattern.service;
 
 import com.elo7.hackday.outboxpattern.entity.Book;
-import com.elo7.hackday.outboxpattern.entity.Outbox;
 import com.elo7.hackday.outboxpattern.repository.AuthorRepository;
 import com.elo7.hackday.outboxpattern.repository.BookRepository;
-import com.elo7.hackday.outboxpattern.repository.OutboxRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,21 +19,25 @@ public class BookService {
     private AuthorRepository authorRepository;
 
     @Autowired
-    private OutboxRepository outboxRepository;
+    private OutboxService<Book> outboxService;
 
     @Transactional
     public Book createBookWithEvent(Book book) {
 
         authorRepository.findById(book.getAuthor().getId())
-            .ifPresent(book::setAuthor);
+                .ifPresent(book::setAuthor);
 
         Book newBook = bookRepository.save(book);
-        outboxRepository.save(Outbox.from(newBook));
+        outboxService.createOutbox(book.getId(), book, "bookCreated");
 
         return book;
     }
 
     public Optional<Book> findBook(Long id) {
-        return bookRepository.findById(id);
+        Optional<Book> optionalBook = bookRepository.findById(id);
+
+        optionalBook.ifPresent(book -> outboxService.createOutbox(book.getId(), book, "bookRetrieved"));
+
+        return optionalBook;
     }
 }

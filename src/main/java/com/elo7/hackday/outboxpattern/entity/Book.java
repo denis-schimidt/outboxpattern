@@ -1,13 +1,12 @@
 package com.elo7.hackday.outboxpattern.entity;
 
-import org.json.JSONObject;
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
-public class Book implements EntityOutbox {
+public class Book {
 
     @Id
     @GeneratedValue
@@ -64,33 +63,7 @@ public class Book implements EntityOutbox {
     }
 
     @Override
-    public UUID getEventId() {
-        return UUID.randomUUID();
-    }
-
-    @Override
-    public Long getAggregateId() {
-        return id;
-    }
-
-    @Override
-    public String getEventType() {
-        return "BookCreated";
-    }
-
-    @Override
-    public String getPayload() {
-        return new JSONObject()
-            .put("title", title)
-            .put("description", description)
-            .put("author", new JSONObject()
-                                .put("id", author.getId())
-                                .put("name",author.getName()))
-            .toString();
-    }
-
-    @Override
-    public LocalDateTime getCreatedAt() {
-        return LocalDateTime.now();
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this, ToStringStyle.JSON_STYLE);
     }
 }

@@ -1,5 +1,9 @@
 package com.elo7.hackday.outboxpattern.entity;
 
+import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -19,7 +23,7 @@ public class Author {
     }
 
     // JPA Eyes
-    public Author() {}
+    Author() {}
 
     public Long getId() {
         return id;
@@ -35,5 +39,10 @@ public class Author {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return ReflectionToStringBuilder.toString(this, ToStringStyle.JSON_STYLE);
     }
 }
