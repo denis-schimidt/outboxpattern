@@ -30,8 +30,14 @@ public class Outbox {
     @Column(name = "payload")
     private String payload;
 
+    @Column(name = "retriesToOriginalTopic")
+    private int retriesToOriginalTopic;
+
+    @Column(name = "retriesToDlqTopic")
+    private int retriesToDlqTopic;
+
     // JPA Eyes
-    Outbox(){}
+    Outbox() {}
 
     public Outbox(UUID eventId, String kafkaPartitionId, String eventType, LocalDateTime createdAt, String payload) {
         this.eventId = eventId;
@@ -53,12 +59,28 @@ public class Outbox {
         return eventType;
     }
 
+    public String getDLQType() {
+        return eventType.concat("-dlq");
+    }
+
     public String getPayload() {
         return payload;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public void addRetryToOriginalTopic() {
+        retriesToOriginalTopic++;
+    }
+
+    public void addRetryToDlqTopic() {
+        retriesToDlqTopic++;
+    }
+
+    public boolean hasExceed(int maxRetriesToSendEventToKafka) {
+        return retriesToOriginalTopic > maxRetriesToSendEventToKafka;
     }
 
     @Override
