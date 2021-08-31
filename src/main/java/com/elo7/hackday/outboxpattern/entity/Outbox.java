@@ -21,8 +21,8 @@ public class Outbox {
     @Column(name = "kafkaPartitionId")
     private String kafkaPartitionId;
 
-    @Column(name = "eventType")
-    private String eventType;
+    @Column(name = "topic")
+    private String topic;
 
     @Column(name = "createdAt")
     private LocalDateTime createdAt;
@@ -30,8 +30,8 @@ public class Outbox {
     @Column(name = "payload")
     private String payload;
 
-    @Column(name = "retriesToOriginalTopic")
-    private int retriesToOriginalTopic;
+    @Column(name = "retriesToTopic")
+    private int retriesToTopic;
 
     @Column(name = "retriesToDlqTopic")
     private int retriesToDlqTopic;
@@ -42,7 +42,7 @@ public class Outbox {
     public Outbox(UUID eventId, String kafkaPartitionId, String eventType, LocalDateTime createdAt, String payload) {
         this.eventId = eventId;
         this.kafkaPartitionId = requireNonNull(kafkaPartitionId);
-        this.eventType = requireNonNull(eventType);
+        this.topic = requireNonNull(eventType);
         this.createdAt = createdAt;
         this.payload = requireNonNull(payload);
     }
@@ -55,12 +55,12 @@ public class Outbox {
         return kafkaPartitionId;
     }
 
-    public String getEventType() {
-        return eventType;
+    public String getTopic() {
+        return topic;
     }
 
-    public String getDLQType() {
-        return eventType.concat("-dlq");
+    public String getDLQTopic() {
+        return topic.concat("DLQ");
     }
 
     public String getPayload() {
@@ -72,15 +72,23 @@ public class Outbox {
     }
 
     public void addRetryToOriginalTopic() {
-        retriesToOriginalTopic++;
+        retriesToTopic++;
     }
 
     public void addRetryToDlqTopic() {
         retriesToDlqTopic++;
     }
 
+    public int getRetriesToDlqTopic() {
+        return retriesToDlqTopic;
+    }
+
+    public int getRetriesToTopic() {
+        return retriesToTopic;
+    }
+
     public boolean hasExceed(int maxRetriesToSendEventToKafka) {
-        return retriesToOriginalTopic > maxRetriesToSendEventToKafka;
+        return retriesToTopic > maxRetriesToSendEventToKafka;
     }
 
     @Override

@@ -6,13 +6,16 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public abstract class OutboxConverter<Entity> {
-    private final UUID eventId = UUID.randomUUID();
-    private final LocalDateTime createdAt = LocalDateTime.now();
+public abstract class OutboxConverter<T> {
+    private UUID eventId;
+    private LocalDateTime createdAt;
     private String kafkaPartitionId;
 
-    public final Outbox toOutbox(Serializable kafkaPartitionId, Entity entity){
+    public final Outbox toOutbox(Serializable kafkaPartitionId, T entity){
         this.kafkaPartitionId = kafkaPartitionId.toString();
+        this.eventId = UUID.randomUUID();
+        this.createdAt =  LocalDateTime.now();
+
         String payload = toKafkaEvent(entity);
 
         return new Outbox(getEventId(), getKafkaPartitionId(), getEventName(), getCreatedAt(), payload);
@@ -32,5 +35,5 @@ public abstract class OutboxConverter<Entity> {
 
     public abstract String getEventName();
 
-    protected abstract String toKafkaEvent(Entity entity);
+    protected abstract String toKafkaEvent(T entity);
 }

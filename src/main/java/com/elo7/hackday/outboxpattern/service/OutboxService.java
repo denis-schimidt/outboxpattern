@@ -2,16 +2,18 @@ package com.elo7.hackday.outboxpattern.service;
 
 import com.elo7.hackday.outboxpattern.converter.OutboxConverterSelector;
 import com.elo7.hackday.outboxpattern.entity.Outbox;
+import com.elo7.hackday.outboxpattern.repository.JpaFirstLevelCacheCleaner;
 import com.elo7.hackday.outboxpattern.repository.OutboxRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.util.stream.Stream;
 
 @Service
-public class OutboxService<Entity> {
+public class OutboxService<T> {
 
     @Autowired
     private OutboxRepository outboxRepository;
@@ -20,9 +22,12 @@ public class OutboxService<Entity> {
     private OutboxSender outboxSender;
 
     @Autowired
-    private OutboxConverterSelector<Entity> outboxConverterSelector;
+    private OutboxConverterSelector<T> outboxConverterSelector;
 
-    public void createOutbox(Serializable kafkaPartitiondId, Entity originalEntity, String eventName) {
+    @Autowired
+    private JpaFirstLevelCacheCleaner jpaCleaner;
+
+    public void createOutbox(Serializable kafkaPartitiondId, T originalEntity, String eventName) {
 
         Outbox outbox = outboxConverterSelector.selectConverter(eventName)
                 .map(converter ->  converter.toOutbox(kafkaPartitiondId, originalEntity))
@@ -32,12 +37,14 @@ public class OutboxService<Entity> {
     }
 
     @Scheduled(fixedRateString = "${fixed-rate.in.milliseconds}")
+    @Transactional
     public void publishEventsOnkafka() {
 
         try (Stream<Outbox> outboxStream = outboxRepository.streamAll()) {
 
             outboxStream.forEach(outbox -> {
                 outboxSender.sendToKafka(outbox);
+                jpaCleaner.clearFirstLevelCacheWhenNecessary();
             });
         }
     }

@@ -10,18 +10,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-public class OutboxConverterSelector<Entity> {
+public class OutboxConverterSelector<T> {
 
-    private Map<String, OutboxConverter<Entity>> outboxConvertersByEvent;
+    private Map<String, OutboxConverter<T>> outboxConvertersByEvent;
 
     @Autowired
-    public OutboxConverterSelector(List<OutboxConverter<Entity>> allOutboxConverters) {
+    public OutboxConverterSelector(List<OutboxConverter<T>> allOutboxConverters) {
         this.outboxConvertersByEvent = allOutboxConverters
                 .stream()
                 .collect(Collectors.toMap(OutboxConverter::getEventName, Function.identity()));
     }
 
-    public Optional<OutboxConverter<Entity>> selectConverter(String eventName) {
+    public Optional<OutboxConverter<T>> selectConverter(String eventName) {
         return Optional.ofNullable(outboxConvertersByEvent.get(eventName));
     }
 }
